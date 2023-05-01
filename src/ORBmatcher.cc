@@ -912,11 +912,19 @@ namespace ORB_SLAM3
 
         //Compute epipole in second image
         Sophus::SE3f T1w = pKF1->GetPose();
-        Sophus::SE3f T2w = pKF2->GetPose();
-        Sophus::SE3f Tw2 = pKF2->GetPoseInverse(); // for convenience
-        Eigen::Vector3f Cw = pKF1->GetCameraCenter();
-        Eigen::Vector3f C2 = T2w * Cw;
+        //returns: mTcw  means to convert a world point to camera
+        //Tcw (world pose in camera reference, 4x4)
 
+        Sophus::SE3f T2w = pKF2->GetPose();
+        Sophus::SE3f Tw2 = pKF2->GetPoseInverse(); // for convenience returns:
+        //mTwc means to convert camera to a world point 
+        //Twc (camera pose in world reference, 4x4)
+        Eigen::Vector3f Cw = pKF1->GetCameraCenter();
+        //get camera center <3,1> mOw;
+        Eigen::Vector3f C2 = T2w * Cw;
+        //camera center * 
+
+        //epipole1 = projection of camera center2 on the image plan1
         Eigen::Vector2f ep = pKF2->mpCamera->project(C2);
         Sophus::SE3f T12;
         Sophus::SE3f Tll, Tlr, Trl, Trr;
@@ -927,6 +935,7 @@ namespace ORB_SLAM3
 
         if(!pKF1->mpCamera2 && !pKF2->mpCamera2){
             T12 = T1w * Tw2;
+            //R12 and t12 extrinsic parameters
             R12 = T12.rotationMatrix();
             t12 = T12.translation();
         }
@@ -1025,6 +1034,8 @@ namespace ORB_SLAM3
 
                         if(!bStereo1 && !bStereo2 && !pKF1->mpCamera2)
                         {
+                            //epipole(ex,ey,ez) , keypoint(kx,ky,kz),
+                            //distex= ex-kx,  distey= ey-ky
                             const float distex = ep(0)-kp2.pt.x;
                             const float distey = ep(1)-kp2.pt.y;
                             if(distex*distex+distey*distey<100*pKF2->mvScaleFactors[kp2.octave])

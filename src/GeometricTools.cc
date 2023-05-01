@@ -46,20 +46,38 @@ Eigen::Matrix3f GeometricTools::ComputeF12(KeyFrame* &pKF1, KeyFrame* &pKF2)
 
 bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w , Eigen::Vector3f &x3D)
 {
-    Eigen::Matrix4f A;
+    Eigen::Matrix4f A;  
+    //We got a match of 2 points from triangulation - x_c1 and x_c2.
+    //x_c1 is point1 =(y,x) , x_c2 is point2 =(y',x')
+    //Tc1w is camera matrix1= p, Tc2w is camera matrix2= p'
+
+    //first row of A: x*p3 (row number 2 in p) - p1 (row number 0 in p)
     A.block<1,4>(0,0) = x_c1(0) * Tc1w.block<1,4>(2,0) - Tc1w.block<1,4>(0,0);
+    //second row of A: y*p3 (row number 2 in p) - p2 (row number 1 in p)
     A.block<1,4>(1,0) = x_c1(1) * Tc1w.block<1,4>(2,0) - Tc1w.block<1,4>(1,0);
+
+    //third row of A: x'*p3' (row number 2 in p') - p1' (row number 0 in p')
     A.block<1,4>(2,0) = x_c2(0) * Tc2w.block<1,4>(2,0) - Tc2w.block<1,4>(0,0);
+    //fourth row of A: y'*p3' (row number 2 in p') - p2' (row number 1 in p')
     A.block<1,4>(3,0) = x_c2(1) * Tc2w.block<1,4>(2,0) - Tc2w.block<1,4>(1,0);
-
+    
+    //A matrix is:
+    //  [  y*p3 - p2    ]
+    //  |  p1 - x*p3    |
+    //  |  y'*p3'-p2'   |
+    //  [  p1' - x'p3'  ]
     Eigen::JacobiSVD<Eigen::Matrix4f> svd(A, Eigen::ComputeFullV);
-
+    //JacobiSVD= U * sigma * V^t where U and V 
+    //Soultion x is the column of V corresponding to the smallest signular value  =col3.
+    
     Eigen::Vector4f x3Dh = svd.matrixV().col(3);
 
     if(x3Dh(3)==0)
         return false;
 
     // Euclidean coordinates
+
+    //divide by Z to return Euclidean coordinates
     x3D = x3Dh.head(3)/x3Dh(3);
 
     return true;
