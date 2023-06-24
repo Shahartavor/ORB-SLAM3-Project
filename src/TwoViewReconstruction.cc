@@ -803,9 +803,11 @@ namespace ORB_SLAM3
         Eigen::Matrix<float,3,4> P1;
         P1.setZero();
         P1.block<3,3>(0,0) = K;
-
+        
         Eigen::Vector3f O1;
         O1.setZero();
+	
+	
 
         // Camera 2 Projection Matrix K[R|t]
         Eigen::Matrix<float,3,4> P2;
@@ -829,8 +831,39 @@ namespace ORB_SLAM3
             Eigen::Vector3f x_p1(kp1.pt.x, kp1.pt.y, 1);
             Eigen::Vector3f x_p2(kp2.pt.x, kp2.pt.y, 1);
 
-            GeometricTools::Triangulate(x_p1, x_p2, P1, P2, p3dC1);
 
+
+	       Eigen::Matrix3f R1;
+    		R1.setIdentity();
+		Eigen::Matrix3f& K_mat = const_cast<Eigen::Matrix3f&>(K);
+		Eigen::Matrix3f& R2 = const_cast<Eigen::Matrix3f&>(R);
+		//Eigen::Vector3f& T2 = const_cast<Eigen::Vector3f&>(t);
+	//	std::cout << "inside two view" <<std::endl;	
+           bool return_tri =false;
+	   /*
+	   //std::cout << "k_mat" << std::endl;
+	   //std::cout << "K" << std::endl;
+std::cout << K_mat << std::endl;
+std::cout << "R1" << std::endl;
+std::cout << R1 << std::endl;
+std::cout << "R2" << std::endl;
+std::cout << R2 << std::endl;
+std::cout << "t1" << std::endl;
+std::cout << O1 << std::endl;
+std::cout << "t2" << std::endl;
+std::cout << T2 << std::endl;
+*/
+	   return_tri = GeometricTools::Triangulate(x_p1, x_p2, P1, P2,K_mat,K_mat,R1,R2,O1,O2 ,p3dC1);
+            if(!return_tri)
+	    
+	    
+	    {
+
+		     vbGood[vMatches12[i].first]=false;
+		    std::cout << "here not good" << std::endl;
+		    continue;
+	    }
+   
 
             if(!isfinite(p3dC1(0)) || !isfinite(p3dC1(1)) || !isfinite(p3dC1(2)))
             {

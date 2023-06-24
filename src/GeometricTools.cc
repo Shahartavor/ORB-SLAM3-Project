@@ -43,27 +43,35 @@ Eigen::Matrix3f GeometricTools::ComputeF12(KeyFrame* &pKF1, KeyFrame* &pKF2)
 
     return K1.transpose().inverse() * tc1c2x * Rc1c2 * K2.inverse();
 }
-bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w , Eigen::Vector3f &x3D)
+
+bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,
+Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w ,   Eigen::Matrix3f &mK_1, Eigen::Matrix3f &mK_2,
+Eigen::Matrix<float,3,3> &Rcw1 ,Eigen::Matrix<float,3,3> &Rcw2,Eigen::Vector3f &tcw1,
+Eigen::Vector3f &tcw2 ,Eigen::Vector3f &x3D)
 {
   Eigen::VectorXf point1(2);
   point1 << x_c1[0], x_c1[1];
   Eigen::VectorXf point2(2);
  point2 << x_c2[0], x_c2[1];
-Triangulation::Poly p(Tc1w, Tc2w);
- std::cout << "point1: " << point1 << std::endl;
-    std::cout << "point2: " << point2 << std::endl;
-    std::cout << "P matrix1: " << Tc1w << std::endl;
-    std::cout << "P matrix2: " << Tc2w << std::endl;
+  //std::cout << "new 8 parameters function" << std::endl;
+Triangulation::Poly p(Tc1w,Tc2w,mK_1,mK_2,Rcw1,Rcw2,tcw1,tcw2);
 
     Eigen::Vector3f result = p.triangulate(point1,point2);
+     if(result.isZero())
+    {
+        std::cout << "error in triangulate" << std::endl;
+            return false;
+    }
     x3D = result;
-   std::cout << "result: " << x3D << std::endl;
     return  true;
+    
 }
+
 /*
 bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w , Eigen::Vector3f &x3D)
 {
-    Eigen::Matrix4f A;  
+    Eigen::Matrix4f A;
+    std::cout << "old geometric tools " << std::endl;  
     //We got a match of 2 points from triangulation - x_c1 and x_c2.
     //x_c1 is point1 =(y,x) , x_c2 is point2 =(y',x')
     //Tc1w is camera matrix1= p, Tc2w is camera matrix2= p'
@@ -99,13 +107,6 @@ bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Ei
 
     return true;
 }
-
-    bool GeometricTools::TriangulatePoly(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w , Eigen::Vector3f &x3D) {
-
-        
-    
-    }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */
+
 } //namespace ORB_SLAM

@@ -462,7 +462,6 @@ void LocalMapping::CreateNewMapPoints()
         // Search matches that fullfil epipolar constraint
         vector<pair<size_t,size_t> > vMatchedIndices;
         bool bCoarse = mbInertial && mpTracker->mState==Tracking::RECENTLY_LOST && mpCurrentKeyFrame->GetMap()->GetIniertialBA2();
-
         matcher.SearchForTriangulation(mpCurrentKeyFrame,pKF2,vMatchedIndices,false,bCoarse); 
 
         Sophus::SE3<float> sophTcw2 = pKF2->GetPose();
@@ -582,7 +581,44 @@ void LocalMapping::CreateNewMapPoints()
             if(cosParallaxRays<cosParallaxStereo && cosParallaxRays>0 && (bStereo1 || bStereo2 ||
                                                                           (cosParallaxRays<0.9996 && mbInertial) || (cosParallaxRays<0.9998 && !mbInertial)))
             {
-                goodProj = GeometricTools::Triangulate(xn1, xn2, eigTcw1, eigTcw2, x3D);
+		//std::cout << "inside local mapping" << std::endl;	
+		//point1,point2,p1,p2,k1,k2,r1,r2,t1,t2, 3dpoint
+		    //t = -R.Transpose().T 
+		    Eigen::Vector3f cur_t1= -tcw1;
+		    Eigen::Vector3f cur_t2 = -tcw2;
+	           //P0 for poly is PO*K!
+		    
+		  Eigen::Matrix<float, 3, 4> mult_p1= mpCurrentKeyFrame->mK_*eigTcw1;
+		  
+		  Eigen::Matrix<float, 3, 4> mult_p2=  pKF2->mK_*eigTcw2;
+		 /*
+		  cout << "+++++++P0+++++++"<<endl;
+		  cout << eigTcw1<<endl;
+		  cout << "+++++++R0+++++++"<<endl;
+		  cout << Rcw1<<endl;
+		  cout << "+++++++T0-before+++++++"<<endl;
+		  cout << tcw1<<endl;
+		  cout << "+++++++T0-after+++++++"<<endl;
+		  cout << cur_t1<<endl;
+		  cout << "+++++++K+++++++"<<endl;
+		  cout << mpCurrentKeyFrame->mK_<<endl;
+		  cout << "+++++++P0 mult+++++++"<<endl;
+		  cout << mult_p1<<endl;
+
+		  cout << "+++++++P1+++++++"<<endl;
+		cout << eigTcw2<<endl;
+		cout << "+++++++R1+++++++"<<endl;
+		cout << Rcw2<<endl;
+		cout << "+++++++T1-before+++++++"<<endl;
+		cout << tcw2<<endl;
+		cout << "+++++++T1-after+++++++"<<endl;
+		cout << cur_t2<<endl;
+		cout << "+++++++K+++++++"<<endl;
+		cout << pKF2->mK_<<endl;
+		cout << "+++++++P1 mult+++++++"<<endl;
+		cout << mult_p2<<endl;
+		*/
+		    goodProj = GeometricTools::Triangulate(xn1, xn2, mult_p1, mult_p2,mpCurrentKeyFrame->mK_,pKF2->mK_, Rcw1,Rcw2,cur_t1,cur_t2,x3D);
                 if(!goodProj)
                     continue;
             }
