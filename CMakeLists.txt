@@ -54,7 +54,7 @@ ${Pangolin_INCLUDE_DIRS}
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME}
 src/System.cc
 src/Tracking.cc
 src/LocalMapping.cc
@@ -114,7 +114,6 @@ include/SerializationUtils.h
 include/Config.h
 include/Settings.h)
 
-add_subdirectory(Thirdparty/g2o)
 
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
@@ -122,11 +121,10 @@ ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
-${PROJECT_SOURCE_DIR}/Thirdparty/PolyToEigen/PolyToEigen/build/libtriangulation.so
+${PROJECT_SOURCE_DIR}/Thirdparty/PolyToEigen/build/libTriangulation.a
 -lboost_serialization
 -lcrypto
 )
-add_subdirectory(Thirdparty/PolyToEigen/PolyToEigen)
 # If RealSense SDK is found the library is added and its examples compiled
 if(realsense2_FOUND)
     include_directories(${PROJECT_NAME}

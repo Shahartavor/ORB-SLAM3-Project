@@ -493,7 +493,6 @@ protected:
     unsigned int mnBackupIdCamera, mnBackupIdCamera2;
 
     // Calibration
-    Eigen::Matrix3f mK_;
 
     // Mutex
     std::mutex mMutexPose; // for pose, velocity and biases
@@ -503,6 +502,7 @@ protected:
 
 public:
     GeometricCamera* mpCamera, *mpCamera2;
+    Eigen::Matrix3f mK_;
 
     //Indexes of stereo observations correspondences
     std::vector<int> mvLeftToRightMatch, mvRightToLeftMatch;

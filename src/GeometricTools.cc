@@ -17,7 +17,7 @@
 */
 
 #include "GeometricTools.h"
-#include "Thirdparty/PolyToEigen/PolyToEigen/Poly.h"
+#include "Thirdparty/PolyToEigen/include/Poly.h"
 #include "KeyFrame.h"
 
 namespace ORB_SLAM3
@@ -66,7 +66,48 @@ Triangulation::Poly p(Tc1w,Tc2w,mK_1,mK_2,Rcw1,Rcw2,tcw1,tcw2);
     return  true;
     
 }
+    bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,
+                                     Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w ,   Eigen::Matrix3f &mK_1, Eigen::Matrix3f &mK_2,
+                                     Eigen::Matrix<float,3,3> &Rcw1 ,Eigen::Matrix<float,3,3> &Rcw2,Eigen::Vector3f &tcw1,
+                                     Eigen::Vector3f &tcw2 ,Eigen::Vector3f &x3D,Eigen::Matrix3f &F)
+    {
+        Eigen::VectorXf point1(2);
+        point1 << x_c1[0], x_c1[1];
+        Eigen::VectorXf point2(2);
+        point2 << x_c2[0], x_c2[1];
+        //std::cout << "new 8 parameters function" << std::endl;
+        Triangulation::Poly p(Tc1w,Tc2w,mK_1,mK_2,Rcw1,Rcw2,tcw1,tcw2,F);
 
+        Eigen::Vector3f result = p.triangulate(point1,point2);
+        if(result.isZero())
+        {
+            std::cout << "error in triangulate" << std::endl;
+            return false;
+        }
+        x3D = result;
+        return  true;
+
+    }
+    bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w , Eigen::Vector3f &x3D)
+    {
+        Eigen::Matrix4f A;
+        A.block<1,4>(0,0) = x_c1(0) * Tc1w.block<1,4>(2,0) - Tc1w.block<1,4>(0,0);
+        A.block<1,4>(1,0) = x_c1(1) * Tc1w.block<1,4>(2,0) - Tc1w.block<1,4>(1,0);
+        A.block<1,4>(2,0) = x_c2(0) * Tc2w.block<1,4>(2,0) - Tc2w.block<1,4>(0,0);
+        A.block<1,4>(3,0) = x_c2(1) * Tc2w.block<1,4>(2,0) - Tc2w.block<1,4>(1,0);
+
+        Eigen::JacobiSVD<Eigen::Matrix4f> svd(A, Eigen::ComputeFullV);
+
+        Eigen::Vector4f x3Dh = svd.matrixV().col(3);
+
+        if(x3Dh(3)==0)
+            return false;
+
+        // Euclidean coordinates
+        x3D = x3Dh.head(3)/x3Dh(3);
+
+        return true;
+    }
 /*
 bool GeometricTools::Triangulate(Eigen::Vector3f &x_c1, Eigen::Vector3f &x_c2,Eigen::Matrix<float,3,4> &Tc1w ,Eigen::Matrix<float,3,4> &Tc2w , Eigen::Vector3f &x3D)
 {
